@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, DeriveLift,
-             StandaloneDeriving, TemplateHaskellQuotes #-}
+             StandaloneDeriving, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module TutorialD.THOrphans () where
 
@@ -14,6 +14,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Vector as Vector
 
+import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
 instance Lift Day where
@@ -43,9 +44,16 @@ instance Lift a => Lift (Vector.Vector a) where
 wrapUnwrap :: Lift t => Name -> (b -> t) -> b -> Q Exp
 wrapUnwrap wn u = (AppE (VarE wn) <$>) . lift . u
 
+instance Lift AtomExpr where
+  lift (AttributeAtomExpr x) = AppE (ConE 'AttributeAtomExpr) <$> lift x
+  lift (NakedAtomExpr x) = AppE (ConE 'NakedAtomExpr) <$> lift x
+  lift (FunctionAtomExpr x y z) = [|FunctionAtomExpr $(lift x) $(lift y) $(lift z)|]
+  lift (RelationAtomExpr x) = AppE (ConE 'RelationAtomExpr) <$> lift x
+  lift (PlaceholderAtomExpr x) = [|NakedAtomExpr (toAtom $(varE . mkName . Text.unpack $ x))|]
+  lift (ConstructedAtomExpr x y z) = [|ConstructedAtomExpr $(lift x) $(lift y) $(lift z)|]
+
 deriving instance Lift Atom
 deriving instance Lift AtomType
-deriving instance Lift AtomExpr
 deriving instance Lift Attribute
 deriving instance Lift AttributeExpr
 deriving instance Lift TupleExpr
