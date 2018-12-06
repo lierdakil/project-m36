@@ -190,6 +190,7 @@ data RelationalExprBase a =
   --relational variables should also be able to be explicitly-typed like in Haskell
   --- | Reference a relation variable by its name.
   RelationVariable RelVarName a |
+  RelationalPlaceholder PlaceholderName |
   --- | Create a projection over attribute names. (Note that the 'AttributeNames' structure allows for the names to be inverted.)
   Project (AttributeNamesBase a) (RelationalExprBase a) |
   --- | Create a union of two relational expressions. The expressions should have identical attributes.

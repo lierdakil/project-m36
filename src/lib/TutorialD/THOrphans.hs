@@ -4,6 +4,7 @@
 module TutorialD.THOrphans () where
 
 import ProjectM36.Base
+import ProjectM36.ToRelationalExpr
 
 import Data.UUID (UUID)
 import Data.Time.Calendar (Day)
@@ -49,6 +50,10 @@ instance Lift AtomExpr where
   lift (PlaceholderAtomExpr x) = [|NakedAtomExpr (toAtom $(varE . mkName . Text.unpack $ x))|]
   lift x = genericLift x
 
+instance Lift RelationalExpr where
+  lift (RelationalPlaceholder phName) = [|toRelationalExpr $(varE . mkName . Text.unpack $ phName)|]
+  lift x = genericLift x
+
 deriving instance Lift Atom
 deriving instance Lift AtomType
 deriving instance Lift Attribute
@@ -65,6 +70,5 @@ deriving instance Lift TypeConstructorDef
 deriving instance Lift DataConstructorDef
 deriving instance Lift DataConstructorDefArg
 deriving instance Lift RestrictionPredicateExpr
-deriving instance Lift RelationalExpr
 deriving instance Lift DatabaseContextExpr
 deriving instance Lift DatabaseContextIOExpr

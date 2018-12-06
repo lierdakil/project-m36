@@ -64,6 +64,7 @@ Library
                      ProjectM36.RelationalExpression,
                      ProjectM36.Relation.Show.HTML,
                      ProjectM36.StaticOptimizer,
+                     ProjectM36.ToRelationalExpr,                     
                      ProjectM36.Relation.Show.Term,
                      ProjectM36.WCWidth,
                      ProjectM36.Relation.Show.CSV,

@@ -133,10 +133,14 @@ relExprP = try withMacroExprP <|> makeExprParser relTerm relOperators
 relVarP :: RelationalMarkerExpr a => Parser (RelationalExprBase a)
 relVarP = RelationVariable <$> identifier <*> parseMarkerP
 
+relPlaceholderP :: Parser (RelationalExprBase a)
+relPlaceholderP = char '$' *> (RelationalPlaceholder <$> identifier)
+
 relTerm :: RelationalMarkerExpr a => Parser (RelationalExprBase a)
 relTerm = parens relExprP
           <|> makeRelationP
           <|> relVarP
+          <|> relPlaceholderP
 
 restrictionPredicateP :: RelationalMarkerExpr a => Parser (RestrictionPredicateExprBase a)
 restrictionPredicateP = makeExprParser predicateTerm predicateOperators
