@@ -20,7 +20,7 @@ mkQQ :: (Lift t) => Parser t -> QuasiQuoter
 mkQQ p = QuasiQuoter {
     quoteExp = either (fail . filterNewlines . parseErrorPretty) lift . parse (
       p <* eof
-      ) "" . T.pack . escapeQQEnd
+      ) "" . T.pack . filterNewlines . escapeQQEnd
   , quotePat = fail "This QuasiQuoter can not be used as pattern"
   , quoteType = fail "This QuasiQuoter can not be used as type"
   , quoteDec = fail "This QuasiQuoter can not be used as declaration"
