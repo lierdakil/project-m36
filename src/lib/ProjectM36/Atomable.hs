@@ -28,11 +28,11 @@ import qualified Data.List.NonEmpty as NE
 {-
 data Test1T = Test1C Int
             deriving (Generic, Show, Eq, Binary, NFData, Atomable)
-                     
-data Test2T = Test2C Int Int                     
+
+data Test2T = Test2C Int Int
             deriving (Generic, Show, Eq, Binary, NFData, Atomable)
-                     
-data Test3T = Test3Ca | Test3Cb                     
+
+data Test3T = Test3Ca | Test3Cb
             deriving (Generic, Show, Eq, Binary, NFData, Atomable)
 -}
 -- | All database values ("atoms") adhere to the 'Atomable' typeclass. This class is derivable allowing new datatypes to be easily marshaling between Haskell values and database values.
@@ -40,7 +40,7 @@ class (Eq a, NFData a, Binary a, Show a) => Atomable a where
   toAtom :: a -> Atom
   default toAtom :: (Generic a, AtomableG (Rep a)) => a -> Atom
   toAtom v = toAtomG (from v) (toAtomTypeG (from v))
-  
+
   fromAtom :: Atom -> a
   default fromAtom :: (Generic a, AtomableG (Rep a)) => Atom -> a
   fromAtom v@(ConstructedAtom _ _ args) = case fromAtomG v args of
@@ -49,24 +49,24 @@ class (Eq a, NFData a, Binary a, Show a) => Atomable a where
   fromAtom v = case fromAtomG v [] of
     Nothing -> error "no fromAtomG for Atom found"
     Just x -> to x
-    
+
   toAtomType :: proxy a -> AtomType
   default toAtomType :: (Generic a, AtomableG (Rep a)) => proxy a -> AtomType
   toAtomType _ = toAtomTypeG (from (undefined :: a))
-                      
+
   -- | Creates DatabaseContextExpr necessary to load the type constructor and data constructor into the database.
   toAddTypeExpr :: proxy a -> DatabaseContextExpr
   default toAddTypeExpr :: (Generic a, AtomableG (Rep a)) => proxy a -> DatabaseContextExpr
   toAddTypeExpr _ = toAddTypeExprG (from (undefined :: a)) (toAtomType (Proxy :: Proxy a))
-  
-instance Atomable Integer where  
+
+instance Atomable Integer where
   toAtom = IntegerAtom
   fromAtom (IntegerAtom i) = i
   fromAtom e = error ("improper fromAtom" ++ show e)
   toAtomType _ = IntegerAtomType
   toAddTypeExpr _ = NoOperation
-  
-instance Atomable Int where  
+
+instance Atomable Int where
   toAtom = IntAtom
   fromAtom (IntAtom i) = i
   fromAtom e = error ("improper fromAtom" ++ show e)
@@ -83,7 +83,7 @@ instance Atomable Double where
 instance Atomable T.Text where
   toAtom = TextAtom
   fromAtom (TextAtom t) = t
-  fromAtom _ = error "improper fromAtom"  
+  fromAtom _ = error "improper fromAtom"
   toAtomType _ = TextAtomType
   toAddTypeExpr _ = NoOperation
 
@@ -114,47 +114,47 @@ instance Atomable Bool where
   fromAtom _ = error "improper fromAtom"
   toAtomType _ = BoolAtomType
   toAddTypeExpr _ = NoOperation
-  
+
 {-
 instance Atomable Relation where
   toAtom = RelationAtom
   fromAtom (RelationAtom r) = r
   fromAtom _ = error "improper fromAtom"
   --warning: cannot be used with undefined "Relation"
-  toAtomType rel = RelationAtomType (attributes rel) 
+  toAtomType rel = RelationAtomType (attributes rel)
   toAddTypeExpr _ = NoOperation
 -}
-  
+
 instance Atomable a => Atomable (Maybe a) where
   toAtom (Just v) = ConstructedAtom "Just" (maybeAtomType (toAtomType (Proxy :: Proxy a))) [toAtom v]
   toAtom Nothing = ConstructedAtom "Nothing" (maybeAtomType (toAtomType (Proxy :: Proxy a))) []
-  
+
   fromAtom (ConstructedAtom "Just" _ [val]) = Just (fromAtom val)
   fromAtom (ConstructedAtom "Nothing" _ []) = Nothing
   fromAtom _ = error "improper fromAtom (Maybe a)"
-  
+
   toAtomType _ = ConstructedAtomType "Maybe" (M.singleton "a" (toAtomType (Proxy :: Proxy a)))
   toAddTypeExpr _ = NoOperation
-  
+
 instance (Atomable a, Atomable b) => Atomable (Either a b) where
-  toAtom (Left l) = ConstructedAtom "Left" (eitherAtomType (toAtomType (Proxy :: Proxy a)) 
+  toAtom (Left l) = ConstructedAtom "Left" (eitherAtomType (toAtomType (Proxy :: Proxy a))
                                             (toAtomType (Proxy :: Proxy b))) [toAtom l]
-  toAtom (Right r) = ConstructedAtom "Right" (eitherAtomType (toAtomType (Proxy :: Proxy a)) 
+  toAtom (Right r) = ConstructedAtom "Right" (eitherAtomType (toAtomType (Proxy :: Proxy a))
                                               (toAtomType (Proxy :: Proxy b))) [toAtom r]
-  
+
   fromAtom (ConstructedAtom "Left" _ [val]) = Left (fromAtom val)
   fromAtom (ConstructedAtom "Right" _ [val]) = Right (fromAtom val)
   fromAtom _ = error "improper fromAtom (Either a b)"
-  
---convert to ADT list  
+
+--convert to ADT list
 instance Atomable a => Atomable [a] where
   toAtom [] = ConstructedAtom "Empty" (listAtomType (toAtomType (Proxy :: Proxy a))) []
   toAtom (x:xs) = ConstructedAtom "Cons" (listAtomType (toAtomType (Proxy :: Proxy a))) (map toAtom (x:xs))
-  
+
   fromAtom (ConstructedAtom "Empty" _ _) = []
   fromAtom (ConstructedAtom "Cons" _ (x:xs)) = fromAtom x:map fromAtom xs
   fromAtom _ = error "improper fromAtom [a]"
-  
+
   toAtomType _ = ConstructedAtomType "List" (M.singleton "a" (toAtomType (Proxy :: Proxy a)))
   toAddTypeExpr _ = NoOperation
 
@@ -167,7 +167,7 @@ instance Atomable a => Atomable (NE.NonEmpty a) where
   toAddTypeExpr _ = NoOperation
 
 #if !MIN_VERSION_binary(0,8,4)
-instance Binary a => Binary (NE.NonEmpty a)  
+instance Binary a => Binary (NE.NonEmpty a)
 #endif
 
 -- Generics
@@ -180,9 +180,9 @@ class AtomableG g where
   toAddTypeExprG :: g a -> AtomType -> DatabaseContextExpr
   getConstructorsG :: g a -> [DataConstructorDef]
   getConstructorArgsG :: g a -> [DataConstructorDefArg]
-  
+
 --data type metadata
-instance (Datatype c, AtomableG a) => AtomableG (M1 D c a) where  
+instance (Datatype c, AtomableG a) => AtomableG (M1 D c a) where
   toAtomG (M1 v) = toAtomG v
   fromAtomG atom args = M1 <$> fromAtomG atom args
   toAtomsG = undefined
@@ -193,10 +193,10 @@ instance (Datatype c, AtomableG a) => AtomableG (M1 D c a) where
     where
       tcDef = ADTypeConstructorDef tcName []
       dataConstructors = getConstructorsG v
-  toAddTypeExprG _ _ = NoOperation      
+  toAddTypeExprG _ _ = NoOperation
   getConstructorsG (M1 v) = getConstructorsG v
   getConstructorArgsG = undefined
-  
+
 --constructor metadata
 instance (Constructor c, AtomableG a) => AtomableG (M1 C c a) where
   --constructor name needed for Atom but not for atomType
@@ -213,7 +213,7 @@ instance (Constructor c, AtomableG a) => AtomableG (M1 C c a) where
   fromAtomG _ _ = error "unsupported generic traversal"
   toAtomsG = undefined
   toAtomTypeG = undefined
-  toAddTypeExprG = undefined  
+  toAddTypeExprG = undefined
   getConstructorsG (M1 v) = [DataConstructorDef (T.pack dName) dArgs]
     where
       dName = conName (undefined :: M1 C c a x)
@@ -226,7 +226,7 @@ instance (Selector c, AtomableG a) => AtomableG (M1 S c a) where
   fromAtomG atom args = M1 <$> fromAtomG atom args
   toAtomsG (M1 v) = toAtomsG v
   toAtomTypeG (M1 v) = toAtomTypeG v
-  toAddTypeExprG _ _ = undefined  
+  toAddTypeExprG _ _ = undefined
   getConstructorsG = undefined
   getConstructorArgsG (M1 v) = getConstructorArgsG v
 
@@ -238,14 +238,14 @@ instance (Atomable a) => AtomableG (K1 c a) where
                            headatom [] = error "no more atoms for constructor!"
   toAtomsG (K1 v) = [toAtom v]
   toAtomTypeG _ = toAtomType (Proxy :: Proxy a)
-  toAddTypeExprG _ _ = undefined    
+  toAddTypeExprG _ _ = undefined
   getConstructorsG = undefined
   getConstructorArgsG (K1 _) = [DataConstructorDefTypeConstructorArg tCons]
     where
       tCons = PrimitiveTypeConstructor primitiveATypeName primitiveAType
       primitiveAType = toAtomType (Proxy :: Proxy a)
       primitiveATypeName = fromMaybe (error ("primitive type missing: " ++ show primitiveAType)) (foldr (\(PrimitiveTypeConstructorDef name typ, _) acc -> if typ == primitiveAType then Just name else acc) Nothing primitiveTypeConstructorMapping)
-        
+
 instance AtomableG U1 where
   toAtomG = undefined
   fromAtomG _ _ = pure U1
@@ -254,7 +254,7 @@ instance AtomableG U1 where
   toAddTypeExprG = undefined
   getConstructorsG = undefined
   getConstructorArgsG _ = []
-  
+
 -- product types
 instance (AtomableG a, AtomableG b) => AtomableG (a :*: b) where
   toAtomG = undefined
@@ -265,7 +265,7 @@ instance (AtomableG a, AtomableG b) => AtomableG (a :*: b) where
           tailatoms [] = error "no more atoms in tail for product!"
   toAtomTypeG = undefined
   toAtomsG (x :*: y) = toAtomsG x ++ toAtomsG y
-  toAddTypeExprG _ _ = undefined    
+  toAddTypeExprG _ _ = undefined
   getConstructorsG = undefined
   getConstructorArgsG (x :*: y) = getConstructorArgsG x ++ getConstructorArgsG y
 
@@ -279,11 +279,10 @@ instance (AtomableG a, AtomableG b) => AtomableG (a :+: b) where
   toAtomsG (R1 x) = toAtomsG x
   toAddTypeExprG _ _ = undefined
   getConstructorsG _ = getConstructorsG (undefined :: a x) ++ getConstructorsG (undefined :: b x)
-  getConstructorArgsG = undefined  
-  
+  getConstructorArgsG = undefined
+
 --this represents the unimplemented generics traversals which should never be called
 {-
 missingError :: a
 missingError = error "missing generics traversal"
 -}
-
