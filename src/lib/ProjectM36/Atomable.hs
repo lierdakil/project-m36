@@ -12,6 +12,7 @@ import ProjectM36.DataTypes.Either
 import GHC.Generics
 import qualified Data.Map as M
 import qualified Data.Text as T
+import qualified Data.Vector as V
 import Control.DeepSeq (NFData)
 import Data.Binary
 import Control.Applicative
@@ -242,9 +243,24 @@ instance (Atomable a) => AtomableG (K1 c a) where
   getConstructorsG = undefined
   getConstructorArgsG (K1 _) = [DataConstructorDefTypeConstructorArg tCons]
     where
-      tCons = PrimitiveTypeConstructor primitiveATypeName primitiveAType
-      primitiveAType = toAtomType (Proxy :: Proxy a)
-      primitiveATypeName = fromMaybe (error ("primitive type missing: " ++ show primitiveAType)) (foldr (\(PrimitiveTypeConstructorDef name typ, _) acc -> if typ == primitiveAType then Just name else acc) Nothing primitiveTypeConstructorMapping)
+      tCons = typeToTypeConstructor $ toAtomType (Proxy :: Proxy a)
+
+typeToTypeConstructor :: AtomType -> TypeConstructor
+typeToTypeConstructor x@(IntAtomType) = PrimitiveTypeConstructor "Int" x
+typeToTypeConstructor x@(IntegerAtomType) = PrimitiveTypeConstructor "Integer" x
+typeToTypeConstructor x@(DoubleAtomType) = PrimitiveTypeConstructor "Double" x
+typeToTypeConstructor x@(TextAtomType) = PrimitiveTypeConstructor "Text" x
+typeToTypeConstructor x@(DayAtomType) = PrimitiveTypeConstructor "Day" x
+typeToTypeConstructor x@(DateTimeAtomType) = PrimitiveTypeConstructor "DateTime" x
+typeToTypeConstructor x@(ByteStringAtomType) = PrimitiveTypeConstructor "ByteString" x
+typeToTypeConstructor x@(BoolAtomType) = PrimitiveTypeConstructor "Bool" x
+typeToTypeConstructor (RelationAtomType attrs)
+  = RelationAtomTypeConstructor $ map attrToAttrExpr $ V.toList attrs
+  where
+    attrToAttrExpr (Attribute n t) = AttributeAndTypeNameExpr n (typeToTypeConstructor t) ()
+typeToTypeConstructor (ConstructedAtomType tcName tvMap)
+  = ADTypeConstructor tcName $ map typeToTypeConstructor (M.elems tvMap)
+typeToTypeConstructor (TypeVariableType tvName) = TypeVariable tvName
 
 instance AtomableG U1 where
   toAtomG = undefined
