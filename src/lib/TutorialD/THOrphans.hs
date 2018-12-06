@@ -13,6 +13,7 @@ import qualified Data.Text as Text
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Vector as Vector
+import Language.Haskell.TH.Lift.Generics
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -45,12 +46,8 @@ wrapUnwrap :: Lift t => Name -> (b -> t) -> b -> Q Exp
 wrapUnwrap wn u = (AppE (VarE wn) <$>) . lift . u
 
 instance Lift AtomExpr where
-  lift (AttributeAtomExpr x) = AppE (ConE 'AttributeAtomExpr) <$> lift x
-  lift (NakedAtomExpr x) = AppE (ConE 'NakedAtomExpr) <$> lift x
-  lift (FunctionAtomExpr x y z) = [|FunctionAtomExpr $(lift x) $(lift y) $(lift z)|]
-  lift (RelationAtomExpr x) = AppE (ConE 'RelationAtomExpr) <$> lift x
   lift (PlaceholderAtomExpr x) = [|NakedAtomExpr (toAtom $(varE . mkName . Text.unpack $ x))|]
-  lift (ConstructedAtomExpr x y z) = [|ConstructedAtomExpr $(lift x) $(lift y) $(lift z)|]
+  lift x = genericLift x
 
 deriving instance Lift Atom
 deriving instance Lift AtomType
