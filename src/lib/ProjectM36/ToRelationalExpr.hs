@@ -17,7 +17,7 @@ instance ToRelationalExpr RelationalExpr where
 instance ToRelationalExpr Relation where
   toRelationalExpr val = ExistingRelation val
 
-instance (Tupleable a) => ToRelationalExpr a where
+instance {-# OVERLAPPABLE #-} (Tupleable a) => ToRelationalExpr a where
   toRelationalExpr val = either (error . show) Prelude.id $ do
       let attrs = toAttributes (Proxy :: Proxy a)
       tuples <- mkTupleSet attrs [toTuple val]
