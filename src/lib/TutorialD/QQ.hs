@@ -36,5 +36,4 @@ pattern QQEscapeChar :: Char
 pattern QQEscapeChar = '~'
 
 filterNewlines :: String -> String
-filterNewlines (x:xs) = (if x == '\n' then ' ' else x) : filterNewlines xs
-filterNewlines [] = []
+filterNewlines = map (\x -> if x == '\n' then ' ' else x)

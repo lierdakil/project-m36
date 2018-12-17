@@ -27,7 +27,7 @@ instance ToRelationalExpr' 'True RelationalExpr where
   toRelationalExpr' _ val = val
 
 instance ToRelationalExpr' 'True Relation where
-  toRelationalExpr' _ val = ExistingRelation val
+  toRelationalExpr' _ = ExistingRelation
 
 instance {-# OVERLAPPABLE #-} (Tupleable a) => ToRelationalExpr' 'False a where
   toRelationalExpr' _ val = either (error . show) Prelude.id $ do
