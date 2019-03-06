@@ -127,13 +127,11 @@ Library
                      TutorialD.Interpreter.Types,
                      TutorialD.Interpreter.SchemaOperator,
                      TutorialD.Interpreter.TransGraphRelationalOperator
-    GHC-Options: -Wall -rdynamic
+    GHC-Options: -Wall
     if os(windows)
       Build-Depends: Win32 >= 2.5.4.1
       Other-Modules: ProjectM36.Win32Handle
     else
-      --219-  too many exported symbols under Windows and GHC 8.4
-      GHC-Options: -rdynamic
       C-sources: cbits/DirectoryFsync.c, cbits/darwin_statfs.c
       Build-Depends: unix
     CC-Options: -fPIC
